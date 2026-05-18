@@ -57,7 +57,7 @@ export default async function AdminDashboard() {
   const { data: allStock } = defaultStoreId
     ? await supabase
         .from('store_stock')
-        .select('quantity, min_quantity, product:products(id, name)')
+        .select('quantity, min_quantity, products!product_id(id, name)')
         .eq('store_id', defaultStoreId)
     : { data: null }
 
@@ -167,7 +167,7 @@ export default async function AdminDashboard() {
             ) : (
               <ul className="space-y-2">
                 {lowStock.slice(0, 7).map((item) => {
-                  const product = item.product as { id: string; name: string } | null
+                  const product = item.products as unknown as { id: string; name: string } | null
                   if (!product) return null
                   return (
                     <li key={product.id} className="flex items-center justify-between text-sm">
