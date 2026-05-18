@@ -271,11 +271,11 @@ export interface Database {
         Returns: void
       }
       decrement_stock_safe: {
-        Args: { p_store_id: string; p_product_id: string; p_qty: number }
+        Args: { p_store_id?: string; p_product_id: string; p_qty: number }
         Returns: void
       }
       increment_stock: {
-        Args: { p_store_id: string; p_product_id: string; p_qty: number; p_reason?: string }
+        Args: { p_store_id?: string; p_product_id: string; p_qty: number; p_reason?: string }
         Returns: void
       }
       receive_purchase: {

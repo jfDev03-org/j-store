@@ -81,11 +81,11 @@ export async function createTestOrder(items: CartItem[], customer: CustomerData)
 
   // Decrement stock atomically for each purchased item
   for (const item of items) {
-    const { data: decremented, error: stockError } = await supabase.rpc(
+    const { error: stockError } = await supabase.rpc(
       'decrement_stock_safe',
       { p_product_id: item.product_id, p_qty: item.quantity }
     )
-    if (stockError || !decremented) {
+    if (stockError) {
       console.error('createTestOrder: stock decrement failed for product', item.product_id, stockError)
     }
   }
