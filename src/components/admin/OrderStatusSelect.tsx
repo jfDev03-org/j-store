@@ -33,7 +33,7 @@ export default function OrderStatusSelect({
       current={current}
       transitions={VALID_TRANSITIONS}
       styles={STATUS_STYLES}
-      updateFn={updateOrderStatus}
+      updateFn={updateOrderStatus as (id: string, status: string) => Promise<{ error?: string }>}
     />
   )
 }

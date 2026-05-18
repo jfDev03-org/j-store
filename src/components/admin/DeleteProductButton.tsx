@@ -13,7 +13,7 @@ export default function DeleteProductButton({ id, name }: { id: string; name: st
     if (!confirm(`Hide "${name}"? This will make the product inactive and remove it from the shop. You can restore it later from the database.`)) return
     startTransition(async () => {
       const result = await deleteProduct(id)
-      if (result.error) toast.error(result.error)
+      if ('error' in result) toast.error(result.error)
       else toast.success('Product hidden')
     })
   }

@@ -67,7 +67,7 @@ export default function PurchaseForm({ products }: Props) {
 
     startTransition(async () => {
       const result = await createPurchase(supplier, notes, validLines)
-      if (result.error) {
+      if ('error' in result) {
         toast.error(result.error)
       } else {
         toast.success('Ordem de compra criada')

@@ -22,14 +22,14 @@ export async function createPurchase(supplier: string, notes: string, items: Pur
 
   const { data: purchase, error: purchaseErr } = await supabase
     .from('purchases')
-    .insert({ supplier: supplier.trim(), notes: notes.trim() || null })
+    .insert({ supplier: supplier.trim(), status: 'pending' as const, notes: notes.trim() || null })
     .select('id')
     .single()
 
   if (purchaseErr || !purchase) return { error: purchaseErr?.message ?? 'Erro ao criar a compra' }
 
   const { error: itemsErr } = await supabase.from('purchase_items').insert(
-    items.map((i) => ({ ...i, purchase_id: purchase.id }))
+    items.map((i) => ({ ...i, purchase_id: purchase.id, quantity_received: 0 }))
   )
   if (itemsErr) {
     // Rollback: delete the orphaned header row so we don't leave partial data

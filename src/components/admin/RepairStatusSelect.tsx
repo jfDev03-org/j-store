@@ -44,7 +44,7 @@ export default function RepairStatusSelect({
       transitions={VALID_TRANSITIONS}
       styles={STATUS_STYLES}
       labelFn={labelFor}
-      updateFn={updateRepairStatus}
+      updateFn={updateRepairStatus as (id: string, status: string) => Promise<{ error?: string }>}
     />
   )
 }

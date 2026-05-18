@@ -38,7 +38,7 @@ export default function StoreDialog({ store }: Props) {
         ? await updateStore(store.id, null, formData)
         : await createStore(null, formData)
 
-      if (result?.error) {
+      if (result && 'error' in result) {
         setError(result.error)
       } else {
         toast.success(store ? 'Loja atualizada' : 'Loja criada')

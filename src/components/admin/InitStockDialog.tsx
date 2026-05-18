@@ -51,7 +51,7 @@ export default function InitStockDialog({ stores, products, existingPairsList, d
     setError(null)
     startTransition(async () => {
       const result = await initializeStock(storeId, productId, quantity, minQuantity)
-      if (result?.error) {
+      if (result && 'error' in result) {
         setError(result.error)
       } else {
         toast.success('Stock inicializado com sucesso')

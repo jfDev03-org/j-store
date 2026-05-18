@@ -19,10 +19,10 @@ export default function UpdatePasswordForm() {
 
     startTransition(async () => {
       const result = await updatePassword(null, formData)
-      if (result?.error) {
+      if ('error' in result) {
         setError(result.error)
       } else {
-        toast.success(result?.message ?? 'Password atualizada com sucesso.')
+        toast.success(result.message ?? 'Password atualizada com sucesso.')
         ;(e.target as HTMLFormElement).reset()
       }
     })

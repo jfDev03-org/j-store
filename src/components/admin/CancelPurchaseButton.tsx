@@ -13,7 +13,7 @@ export default function CancelPurchaseButton({ purchaseId }: { purchaseId: strin
     if (!confirm('Cancel this purchase order?')) return
     startTransition(async () => {
       const result = await cancelPurchase(purchaseId)
-      if (result.error) {
+      if ('error' in result) {
         toast.error(result.error)
       } else {
         toast.success('Purchase order cancelled')

@@ -66,7 +66,9 @@ export async function POST(req: NextRequest) {
           order_id: claimed.id,
           stripe_session_id: session.id,
           stripe_event_id: event.id,
-          payment_intent: session.payment_intent,
+          payment_intent: typeof session.payment_intent === 'string'
+            ? session.payment_intent
+            : (session.payment_intent?.id ?? null),
         },
       })
     }

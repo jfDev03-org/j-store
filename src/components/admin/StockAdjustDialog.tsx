@@ -42,7 +42,7 @@ export default function StockAdjustDialog({ productId, productName, currentQty }
     e.preventDefault()
     startTransition(async () => {
       const result = await adjustStock(productId, delta, reason)
-      if (result.error) {
+      if ('error' in result) {
         toast.error(result.error)
       } else {
         toast.success('Stock adjusted successfully')

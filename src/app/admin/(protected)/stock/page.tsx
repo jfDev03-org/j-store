@@ -26,7 +26,7 @@ export default async function AdminStockPage({
 
   const { data: rows } = await supabase
     .from('store_stock')
-    .select('quantity, min_quantity, product:products(id, name, sku, is_active)')
+    .select('quantity, min_quantity, product:products!product_id(id, name, sku, is_active)')
     .eq('store_id', activeStoreId)
     .order('quantity', { ascending: true })
 
@@ -34,7 +34,7 @@ export default async function AdminStockPage({
 
   // Build list of already-tracked pairs for InitStockDialog (array — Set is not serializable)
   const existingPairsList = (rows ?? []).map((r) => {
-    const product = r.product as { id: string } | null
+    const product = r.product as unknown as { id: string } | null
     return product ? `${activeStoreId}:${product.id}` : null
   }).filter(Boolean) as string[]
 
@@ -113,7 +113,7 @@ export default async function AdminStockPage({
                 </tr>
               ) : (
                 rows.map((row) => {
-                  const product = row.product as { id: string; name: string; sku: string | null; is_active: boolean } | null
+                  const product = row.product as unknown as { id: string; name: string; sku: string | null; is_active: boolean } | null
                   if (!product) return null
                   const isLow = row.quantity <= (row.min_quantity ?? 5)
                   const isOut = row.quantity === 0

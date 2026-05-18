@@ -22,7 +22,7 @@ export default function ToggleStoreButton({ storeId, isActive }: Props) {
     setOpen(false)
     startTransition(async () => {
       const result = await toggleStoreActive(storeId, isActive)
-      if (result?.error) {
+      if (result && 'error' in result) {
         toast.error(result.error)
       } else {
         toast.success(isActive ? 'Loja desativada' : 'Loja ativada')

@@ -19,10 +19,10 @@ export default function UpdateEmailForm() {
 
     startTransition(async () => {
       const result = await updateEmail(null, formData)
-      if (result?.error) {
+      if ('error' in result) {
         setError(result.error)
       } else {
-        toast.success(result?.message ?? 'Email atualizado. Verifica o teu email.')
+        toast.success(result.message ?? 'Email atualizado. Verifica o teu email.')
         ;(e.target as HTMLFormElement).reset()
       }
     })

@@ -31,7 +31,7 @@ export default function BookingStatusSelect({
       current={current}
       transitions={VALID_TRANSITIONS}
       styles={STATUS_STYLES}
-      updateFn={updateBookingStatus}
+      updateFn={updateBookingStatus as (id: string, status: string) => Promise<{ error?: string }>}
     />
   )
 }

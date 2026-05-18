@@ -113,7 +113,7 @@ export default function ProductForm({ product, categories }: Props) {
         ? await updateProduct(product.id, form)
         : await createProduct(form)
 
-      if (result.error) {
+      if ('error' in result) {
         toast.error(result.error)
       } else {
         toast.success(isEdit ? 'Produto atualizado' : 'Produto criado')

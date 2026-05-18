@@ -13,7 +13,7 @@ export default function ReceivePurchaseButton({ purchaseId }: { purchaseId: stri
     if (!confirm('Mark this purchase as received and add stock?')) return
     startTransition(async () => {
       const result = await receivePurchase(purchaseId)
-      if (result.error) {
+      if ('error' in result) {
         toast.error(result.error)
       } else {
         toast.success('Purchase received — stock updated')

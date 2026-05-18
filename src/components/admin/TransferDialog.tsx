@@ -69,7 +69,7 @@ export default function TransferDialog({ stores, products, storeStock, defaultFr
     setError(null)
     startTransition(async () => {
       const result = await transferStock(fromStoreId, toStoreId, productId, qty)
-      if (result?.error) {
+      if (result && 'error' in result) {
         setError(result.error)
       } else {
         toast.success(`Transferência realizada com sucesso`)

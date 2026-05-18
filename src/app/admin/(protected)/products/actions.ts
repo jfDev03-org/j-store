@@ -42,6 +42,7 @@ export async function createProduct(data: ProductFormData) {
     store_id: storeId,
     product_id: product.id,
     quantity: data.stock,
+    min_quantity: 5,
   })
 
   revalidatePath('/admin/products')

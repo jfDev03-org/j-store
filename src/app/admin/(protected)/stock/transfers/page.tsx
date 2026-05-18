@@ -26,7 +26,7 @@ export default async function AdminStockTransfersPage() {
   // Recent transfer movements across all stores, with store name
   const { data: movements } = await supabase
     .from('stock_movements')
-    .select('id, delta, reason, created_at, store_id, product:products(name, sku), store:stores(name)')
+    .select('id, delta, reason, created_at, store_id, product:products!product_id(name, sku), store:stores!store_id(name)')
     .in('reason', ['transfer_in', 'transfer_out'])
     .order('created_at', { ascending: false })
     .limit(100)
@@ -94,8 +94,8 @@ export default async function AdminStockTransfersPage() {
                 </tr>
               ) : (
                 movements.map((m) => {
-                  const product = m.product as { name: string; sku: string | null } | null
-                  const store = m.store as { name: string } | null
+                  const product = m.product as unknown as { name: string; sku: string | null } | null
+                  const store = m.store as unknown as { name: string } | null
                   const isIn = m.reason === 'transfer_in'
                   return (
                     <tr key={m.id} className="hover:bg-muted/20 transition-colors">

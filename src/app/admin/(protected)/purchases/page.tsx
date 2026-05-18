@@ -21,7 +21,7 @@ export default async function AdminPurchasesPage() {
   const [{ data: purchases }, { data: products }] = await Promise.all([
     supabase
       .from('purchases')
-      .select('*, purchase_items(id, product_id, quantity_ordered, quantity_received, unit_cost)')
+      .select('*, purchase_items!purchase_id(id, product_id, quantity_ordered, quantity_received, unit_cost)')
       .order('created_at', { ascending: false })
       .limit(100),
     supabase
@@ -62,7 +62,7 @@ export default async function AdminPurchasesPage() {
                 // Build map once, outside the per-row render
                 const productMap = new Map((products ?? []).map((p: Pick<ProductRow, 'id' | 'name' | 'sku'>) => [p.id, p]))
                 return purchases.map((po) => {
-                  const items = (po.purchase_items ?? []) as PurchaseItemRow[]
+                  const items = (po.purchase_items ?? []) as unknown as PurchaseItemRow[]
                   const totalCost = items.reduce((s, i) => s + i.unit_cost * i.quantity_ordered, 0)
 
                   return (
