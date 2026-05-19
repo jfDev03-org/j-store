@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { stripe } from '@/lib/stripe'
 import { createAdminClient } from '@/lib/supabase/server'
+import { sendOrderConfirmation } from '@/lib/email'
 import type Stripe from 'stripe'
 
 export async function POST(req: NextRequest) {
@@ -71,6 +72,19 @@ export async function POST(req: NextRequest) {
             : (session.payment_intent?.id ?? null),
         },
       })
+
+      // 0.4 — Send order confirmation email (non-blocking; never fail the webhook)
+      const { data: fullOrder } = await supabase
+        .from('orders')
+        .select('*')
+        .eq('id', claimed.id)
+        .single()
+
+      if (fullOrder) {
+        sendOrderConfirmation(fullOrder).catch((err) =>
+          console.error('Order confirmation email failed:', err)
+        )
+      }
     }
   }
 

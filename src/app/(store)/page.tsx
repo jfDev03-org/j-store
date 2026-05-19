@@ -68,6 +68,10 @@ export const metadata = {
     'Professional mobile phone repairs and a wide selection of accessories and components. Fast, reliable, affordable.',
 }
 
+// Revalidate at most once per hour. Admin actions use revalidatePath() to bust
+// this cache immediately when products or categories change.
+export const revalidate = 3600
+
 export default async function HomePage() {
   const supabase = await createClient()
   const [{ data: categories }, { data: latestProducts }] = await Promise.all([

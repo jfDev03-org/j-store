@@ -8,19 +8,25 @@ interface Props {
   params: Promise<{ category: string }>
 }
 
+// Revalidate at most once per hour; busted immediately by admin revalidatePath().
+export const revalidate = 3600
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { category } = await params
   const supabase = await createClient()
   const { data } = await supabase.from('categories').select('name').eq('slug', category).single()
+  const base = process.env.NEXT_PUBLIC_APP_URL ?? 'https://jstore.pt'
   return {
     title: data ? `${data.name} — Shop` : 'Category',
     description: `Browse ${data?.name ?? category} products at JStore.`,
+    alternates: { canonical: `${base}/shop/${category}` },
   }
 }
 
 export default async function CategoryPage({ params }: Props) {
   const { category } = await params
   const supabase = await createClient()
+  const base = process.env.NEXT_PUBLIC_APP_URL ?? 'https://jstore.pt'
 
   const { data: categoryData } = await supabase
     .from('categories')
@@ -37,35 +43,51 @@ export default async function CategoryPage({ params }: Props) {
     .eq('category_id', categoryData.id)
     .order('created_at', { ascending: false })
 
+  const breadcrumbJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: `${base}/` },
+      { '@type': 'ListItem', position: 2, name: 'Shop', item: `${base}/shop` },
+      { '@type': 'ListItem', position: 3, name: categoryData.name, item: `${base}/shop/${category}` },
+    ],
+  }
+
   return (
-    <div className="container mx-auto px-4 py-10">
-      <nav aria-label="Breadcrumb" className="text-sm text-muted-foreground mb-6">
-        <ol className="flex items-center gap-2">
-          <li><Link href="/" className="hover:text-foreground">Home</Link></li>
-          <li aria-hidden="true">/</li>
-          <li><Link href="/shop" className="hover:text-foreground">Shop</Link></li>
-          <li aria-hidden="true">/</li>
-          <li className="text-foreground font-medium" aria-current="page">{categoryData.name}</li>
-        </ol>
-      </nav>
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+      <div className="container mx-auto px-4 py-10">
+        <nav aria-label="Breadcrumb" className="text-sm text-muted-foreground mb-6">
+          <ol className="flex items-center gap-2">
+            <li><Link href="/" className="hover:text-foreground">Home</Link></li>
+            <li aria-hidden="true">/</li>
+            <li><Link href="/shop" className="hover:text-foreground">Shop</Link></li>
+            <li aria-hidden="true">/</li>
+            <li className="text-foreground font-medium" aria-current="page">{categoryData.name}</li>
+          </ol>
+        </nav>
 
-      <h1 className="text-3xl font-bold mb-2">{categoryData.name}</h1>
-      {categoryData.description && (
-        <p className="text-muted-foreground mb-8">{categoryData.description}</p>
-      )}
+        <h1 className="text-3xl font-bold mb-2">{categoryData.name}</h1>
+        {categoryData.description && (
+          <p className="text-muted-foreground mb-8">{categoryData.description}</p>
+        )}
 
-      {!categoryProducts || categoryProducts.length === 0 ? (
-        <div className="text-center py-20 text-muted-foreground">
-          <p className="text-lg">No products in this category yet.</p>
-          <Link href="/shop" className="text-primary underline mt-2 inline-block">Back to shop</Link>
-        </div>
-      ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-          {categoryProducts.map((product) => (
-            <ProductCard key={product.id} product={product} categorySlug={category} />
-          ))}
-        </div>
-      )}
-    </div>
+        {!categoryProducts || categoryProducts.length === 0 ? (
+          <div className="text-center py-20 text-muted-foreground">
+            <p className="text-lg">No products in this category yet.</p>
+            <Link href="/shop" className="text-primary underline mt-2 inline-block">Back to shop</Link>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+            {categoryProducts.map((product) => (
+              <ProductCard key={product.id} product={product} categorySlug={category} />
+            ))}
+          </div>
+        )}
+      </div>
+    </>
   )
 }

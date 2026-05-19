@@ -1,9 +1,8 @@
 import { createAdminClient } from '@/lib/supabase/server'
-import { Badge } from '@/components/ui/badge'
-import StockAdjustDialog from '@/components/admin/StockAdjustDialog'
 import InitStockDialog from '@/components/admin/InitStockDialog'
+import RealtimeStockTable from '@/components/admin/RealtimeStockTable'
 import Link from 'next/link'
-import { ArrowRightLeft, AlertTriangle } from 'lucide-react'
+import { AlertTriangle, ArrowRightLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import type { Metadata } from 'next'
 
@@ -103,62 +102,16 @@ export default async function AdminStockPage({
                   <th scope="col" className="px-4 py-3" />
                 </tr>
             </thead>
-            <tbody className="divide-y">
-              {!rows || rows.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="px-4 py-12 text-center text-muted-foreground">
-                    <p className="text-sm">Sem stock registado nesta loja.</p>
-                    <p className="text-xs mt-1">Usa o botão &quot;Adicionar ao Stock&quot; para começar.</p>
-                  </td>
-                </tr>
-              ) : (
-                rows.map((row) => {
-                  const product = row.product as unknown as { id: string; name: string; sku: string | null; is_active: boolean } | null
-                  if (!product) return null
-                  const isLow = row.quantity <= (row.min_quantity ?? 5)
-                  const isOut = row.quantity === 0
-
-                  return (
-                    <tr
-                      key={product.id}
-                      className={`transition-colors ${isLow ? 'bg-amber-50 hover:bg-amber-100/60' : 'hover:bg-muted/20'}`}
-                    >
-                      <td className="px-4 py-3">
-                        <p className="font-medium">{product.name}</p>
-                        {!product.is_active && (
-                          <span className="text-xs text-muted-foreground">(inativo)</span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3 text-muted-foreground">{product.sku ?? '—'}</td>
-                      <td className="px-4 py-3">
-                        <span className={`font-semibold ${isOut ? 'text-destructive' : isLow ? 'text-amber-600' : ''}`}>
-                          {row.quantity}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-muted-foreground">{row.min_quantity ?? 5}</td>
-                      <td className="px-4 py-3">
-                        {isOut ? (
-                          <Badge variant="destructive">Sem stock</Badge>
-                        ) : isLow ? (
-                          <Badge className="bg-amber-100 text-amber-800 border-amber-200 hover:bg-amber-100">
-                            <AlertTriangle className="h-3 w-3 mr-1" />Stock baixo
-                          </Badge>
-                        ) : (
-                          <Badge variant="secondary">OK</Badge>
-                        )}
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        <StockAdjustDialog
-                          productId={product.id}
-                          productName={product.name}
-                          currentQty={row.quantity}
-                        />
-                      </td>
-                    </tr>
-                  )
-                })
-              )}
-            </tbody>
+            {/* RealtimeStockTable is a Client Component that subscribes to live
+                stock changes via Supabase Realtime. Initial rows come from SSR. */}
+            <RealtimeStockTable
+              storeId={activeStoreId}
+              initialRows={(rows ?? []).map((r) => ({
+                product: r.product as unknown as { id: string; name: string; sku: string | null; is_active: boolean } | null,
+                quantity: r.quantity,
+                min_quantity: r.min_quantity,
+              }))}
+            />
           </table>
         </div>
       </div>

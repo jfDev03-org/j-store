@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { createAdminClient } from '@/lib/supabase/server'
 import { guardAdmin } from '@/lib/admin-guard'
+import { sendRepairStatusUpdate } from '@/lib/email'
 import type { RepairRequestRow } from '@/types/database'
 
 const VALID_REPAIR_TRANSITIONS: Record<RepairRequestRow['status'], RepairRequestRow['status'][]> = {
@@ -39,12 +40,17 @@ export async function updateRepairStatus(id: string, status: RepairRequestRow['s
     .update({ status })
     .eq('id', id)
     .eq('status', repair.status)
-    .select('id')
+    .select('*')
     .single()
 
   if (!updated) {
     return { error: error?.message ?? 'Status was changed by another request — please refresh' }
   }
+
+  // Send email notification to the customer (non-blocking; never fail the action)
+  sendRepairStatusUpdate(updated, status).catch((err) =>
+    console.error('Repair status email failed:', err)
+  )
 
   revalidatePath('/admin/repairs')
   return { success: true }

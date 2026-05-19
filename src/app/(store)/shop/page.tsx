@@ -1,30 +1,42 @@
 import Link from 'next/link'
+import { Suspense } from 'react'
 import { createClient } from '@/lib/supabase/server'
 import ProductCard from '@/components/shop/ProductCard'
-import { Badge } from '@/components/ui/badge'
+import SearchBar from '@/components/shop/SearchBar'
 import type { Metadata } from 'next'
-import type { Category } from '@/types/database'
 
 export const metadata: Metadata = {
   title: 'Shop',
   description: 'Browse our full range of phone accessories and components.',
 }
 
-export default async function ShopPage() {
+// Revalidate at most once per hour; busted immediately by admin revalidatePath().
+export const revalidate = 3600
+
+interface Props {
+  searchParams: Promise<{ q?: string }>
+}
+
+export default async function ShopPage({ searchParams }: Props) {
+  const { q } = await searchParams
   const supabase = await createClient()
 
-  const [{ data: categories }, { data: featuredProducts }, { data: allCategories }] = await Promise.all([
+  const [{ data: categories }, { data: allCategories }] = await Promise.all([
     supabase.from('categories').select('*').order('name'),
-    supabase
-      .from('products')
-      .select('*')
-      .eq('is_active', true)
-      .order('created_at', { ascending: false })
-      .limit(12),
     supabase.from('categories').select('id, slug'),
   ])
 
-  // Build a category slug map for products
+  // If a search query is provided, use full-text search via the generated tsvector column.
+  // Otherwise fall back to the latest 48 products.
+  const productsQuery = supabase
+    .from('products')
+    .select('*')
+    .eq('is_active', true)
+
+  const { data: products } = q
+    ? await productsQuery.textSearch('search_vector', q, { type: 'websearch' }).limit(48)
+    : await productsQuery.order('created_at', { ascending: false }).limit(48)
+
   const categorySlugMap = new Map<string, string>(
     (allCategories ?? []).map((c) => [c.id, c.slug])
   )
@@ -40,11 +52,19 @@ export default async function ShopPage() {
         </ol>
       </nav>
 
-      <h1 className="text-3xl font-bold mb-1">Shop</h1>
-      <p className="text-muted-foreground mb-8">Accessories, cases, chargers, components and more.</p>
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6">
+        <div>
+          <h1 className="text-3xl font-bold mb-1">Shop</h1>
+          <p className="text-muted-foreground">Accessories, cases, chargers, components and more.</p>
+        </div>
+        {/* SearchBar uses useSearchParams — must be wrapped in Suspense */}
+        <Suspense>
+          <SearchBar />
+        </Suspense>
+      </div>
 
-      {/* Category filter */}
-      {categories && categories.length > 0 && (
+      {/* Category filter — hidden when searching to avoid confusion */}
+      {!q && categories && categories.length > 0 && (
         <div className="mb-10">
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">Browse by category</p>
           <div className="flex flex-wrap gap-2" role="list" aria-label="Filter by category">
@@ -64,17 +84,35 @@ export default async function ShopPage() {
         </div>
       )}
 
+      {/* Search results label */}
+      {q && (
+        <p className="text-sm text-muted-foreground mb-6">
+          {products && products.length > 0
+            ? `${products.length} result${products.length === 1 ? '' : 's'} for "${q}"`
+            : `No results for "${q}"`}
+        </p>
+      )}
+
       {/* Products grid */}
-      {!featuredProducts || featuredProducts.length === 0 ? (
+      {!products || products.length === 0 ? (
         <div className="text-center py-20 text-muted-foreground">
-          <p className="text-lg">No products available yet. Check back soon!</p>
+          {q ? (
+            <>
+              <p className="text-lg">No products found for &ldquo;{q}&rdquo;</p>
+              <Link href="/shop" className="text-primary underline mt-2 inline-block text-sm">
+                Clear search
+              </Link>
+            </>
+          ) : (
+            <p className="text-lg">No products available yet. Check back soon!</p>
+          )}
         </div>
       ) : (
         <div
           className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6"
           aria-label="Product grid"
         >
-          {featuredProducts.map((product) => {
+          {products.map((product) => {
             const slug = product.category_id
               ? (categorySlugMap.get(product.category_id) ?? 'uncategorised')
               : 'uncategorised'
