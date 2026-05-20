@@ -9,10 +9,12 @@ import { toast } from 'sonner'
 import { submitQuote } from '@/app/(store)/repairs/quote/actions'
 import { Loader2, CheckCircle } from 'lucide-react'
 import Link from 'next/link'
+import { useTranslations } from '@/lib/i18n'
 
 const DEVICE_BRANDS = ['Apple iPhone', 'Samsung', 'Xiaomi', 'Huawei', 'OnePlus', 'Oppo', 'Motorola', 'Nokia', 'Other']
 
 export default function QuoteForm() {
+  const t = useTranslations()
   const [loading, setLoading] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [form, setForm] = useState({
@@ -32,7 +34,7 @@ export default function QuoteForm() {
     e.preventDefault()
 
     if (!form.device_brand || !form.device_model || !form.issue_description || !form.customer_name || !form.customer_email || !form.customer_phone) {
-      toast.error('Please fill in all required fields.')
+      toast.error(t.quote.errorFillFields)
       return
     }
 
@@ -40,12 +42,12 @@ export default function QuoteForm() {
     try {
       const result = await submitQuote(form)
       if (!result.success) {
-        toast.error('error' in result ? result.error : 'An error occurred. Please try again.')
+        toast.error('error' in result ? result.error : t.quote.errorFailed)
         return
       }
       setSubmitted(true)
     } catch {
-      toast.error('Failed to submit. Please try again or call us directly.')
+      toast.error(t.quote.errorFailed)
     } finally {
       setLoading(false)
     }
@@ -55,17 +57,17 @@ export default function QuoteForm() {
     return (
       <div className="text-center py-10 space-y-4">
         <CheckCircle className="h-14 w-14 text-green-500 mx-auto" aria-hidden="true" />
-        <h2 className="text-xl font-bold">Quote Request Received!</h2>
+        <h2 className="text-xl font-bold">{t.quote.successTitle}</h2>
         <p className="text-muted-foreground">
-          We&apos;ll assess your device and get back to you within 24 hours at{' '}
+          {t.quote.successMsg}{' '}
           <span className="font-medium text-foreground">{form.customer_email}</span>.
         </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
           <Button asChild>
-            <Link href="/repairs/booking">Book an Appointment</Link>
+            <Link href="/repairs/booking">{t.quote.successBookButton}</Link>
           </Button>
           <Button variant="outline" asChild>
-            <Link href="/">Back to Home</Link>
+            <Link href="/">{t.quote.successHomeButton}</Link>
           </Button>
         </div>
       </div>
@@ -74,15 +76,14 @@ export default function QuoteForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6" noValidate>
-      {/* Device info */}
       <fieldset className="space-y-4">
         <legend className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">
-          Device Information
+          {t.quote.deviceInfoLegend}
         </legend>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-1.5">
-            <Label htmlFor="device_brand">Brand <span aria-hidden="true" className="text-destructive">*</span></Label>
+            <Label htmlFor="device_brand">{t.quote.brandLabel} <span aria-hidden="true" className="text-destructive">*</span></Label>
             <select
               id="device_brand"
               required
@@ -91,7 +92,7 @@ export default function QuoteForm() {
               className="w-full h-9 rounded-md border bg-background px-3 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
               aria-required="true"
             >
-              <option value="">Select brand…</option>
+              <option value="">{t.quote.brandPlaceholder}</option>
               {DEVICE_BRANDS.map((b) => (
                 <option key={b} value={b}>{b}</option>
               ))}
@@ -99,7 +100,7 @@ export default function QuoteForm() {
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="device_model">Model <span aria-hidden="true" className="text-destructive">*</span></Label>
+            <Label htmlFor="device_model">{t.quote.modelLabel} <span aria-hidden="true" className="text-destructive">*</span></Label>
             <Input
               id="device_model"
               placeholder="e.g. iPhone 15, Galaxy S23"
@@ -113,10 +114,10 @@ export default function QuoteForm() {
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor="issue_description">Describe the issue <span aria-hidden="true" className="text-destructive">*</span></Label>
+          <Label htmlFor="issue_description">{t.quote.issueLabel} <span aria-hidden="true" className="text-destructive">*</span></Label>
           <Textarea
             id="issue_description"
-            placeholder="e.g. cracked screen, not charging, water damage…"
+            placeholder={t.quote.issuePlaceholder}
             required
             rows={4}
             value={form.issue_description}
@@ -127,14 +128,13 @@ export default function QuoteForm() {
         </div>
       </fieldset>
 
-      {/* Contact info */}
       <fieldset className="space-y-4">
         <legend className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">
-          Your Contact Details
+          {t.quote.contactLegend}
         </legend>
 
         <div className="space-y-1.5">
-          <Label htmlFor="customer_name">Full Name <span aria-hidden="true" className="text-destructive">*</span></Label>
+          <Label htmlFor="customer_name">{t.quote.fullName} <span aria-hidden="true" className="text-destructive">*</span></Label>
           <Input
             id="customer_name"
             placeholder="João Silva"
@@ -149,7 +149,7 @@ export default function QuoteForm() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-1.5">
-            <Label htmlFor="customer_email">Email <span aria-hidden="true" className="text-destructive">*</span></Label>
+            <Label htmlFor="customer_email">{t.quote.email} <span aria-hidden="true" className="text-destructive">*</span></Label>
             <Input
               id="customer_email"
               type="email"
@@ -163,7 +163,7 @@ export default function QuoteForm() {
             />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="customer_phone">Phone <span aria-hidden="true" className="text-destructive">*</span></Label>
+            <Label htmlFor="customer_phone">{t.quote.phone} <span aria-hidden="true" className="text-destructive">*</span></Label>
             <Input
               id="customer_phone"
               type="tel"
@@ -181,7 +181,7 @@ export default function QuoteForm() {
 
       <Button type="submit" size="lg" className="w-full" disabled={loading}>
         {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />}
-        {loading ? 'Submitting…' : 'Submit Quote Request'}
+        {loading ? t.quote.submitting : t.quote.submitButton}
       </Button>
     </form>
   )

@@ -10,21 +10,24 @@ import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet'
 import { Separator } from '@/components/ui/separator'
 import { useCartStore } from '@/store/cart'
 import CartDrawer from '@/components/layout/CartDrawer'
-
-const navLinks = [
-  { href: '/shop', label: 'Shop' },
-  { href: '/repairs', label: 'Repairs' },
-  { href: '/about', label: 'About' },
-  { href: '/contact', label: 'Contact' },
-]
+import { LanguageSwitcher } from '@/components/ui/language-switcher'
+import { useTranslations } from '@/lib/i18n'
 
 export default function Header() {
+  const t = useTranslations()
   const pathname = usePathname()
   const { itemCount, openCart } = useCartStore()
   const count = itemCount()
   const [menuOpen, setMenuOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
   useEffect(() => setMounted(true), [])
+
+  const navLinks = [
+    { href: '/shop', label: t.nav.shop },
+    { href: '/repairs', label: t.nav.repairs },
+    { href: '/about', label: t.nav.about },
+    { href: '/contact', label: t.nav.contact },
+  ]
 
   function closeMenu() {
     setMenuOpen(false)
@@ -33,18 +36,18 @@ export default function Header() {
   return (
     <>
       <header className="sticky top-0 z-50 w-full shadow-sm">
-        {/* Announcement bar — single item on mobile, full on sm+ */}
+        {/* Announcement bar */}
         <div className="bg-primary text-primary-foreground text-xs py-1.5">
           <div className="container mx-auto px-4 flex items-center justify-center gap-5">
             <span className="flex items-center gap-1.5">
               <Truck className="h-3 w-3 shrink-0" aria-hidden="true" />
-              <span className="sm:hidden">Free shipping over €50</span>
-              <span className="hidden sm:inline">Orders before 19:00 — next-day delivery</span>
+              <span className="sm:hidden">{t.announcement.shippingMobile}</span>
+              <span className="hidden sm:inline">{t.announcement.shippingDesktop}</span>
             </span>
             <span className="opacity-40 hidden sm:inline">|</span>
-            <span className="hidden sm:inline">Free shipping on orders over €50</span>
+            <span className="hidden sm:inline">{t.announcement.freeShipping}</span>
             <span className="opacity-40 hidden lg:inline">|</span>
-            <span className="hidden lg:inline">90-day warranty on all repairs</span>
+            <span className="hidden lg:inline">{t.announcement.warranty}</span>
           </div>
         </div>
 
@@ -77,21 +80,19 @@ export default function Header() {
 
             {/* Actions */}
             <div className="flex items-center gap-1 sm:gap-2">
-              {/* Phone shortcut — desktop only */}
               <a
                 href="tel:+351000000000"
-                aria-label="Call us"
+                aria-label={t.nav.contact}
                 className="hidden lg:flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
               >
                 <Phone className="h-4 w-4" />
                 <span>+351 000 000 000</span>
               </a>
 
-              {/* Cart */}
               <Button
                 variant="ghost"
                 size="icon"
-                aria-label={mounted ? `Open cart, ${count} item${count !== 1 ? 's' : ''}` : 'Open cart'}
+                aria-label={mounted ? `${t.cart.title}, ${count} ${count !== 1 ? t.cart.itemsSuffix : t.cart.itemSuffix}` : t.cart.title}
                 className="relative"
                 onClick={openCart}
               >
@@ -106,12 +107,12 @@ export default function Header() {
                 )}
               </Button>
 
-              {/* Repair CTA — hidden on small mobile */}
               <Button asChild size="sm" className="hidden sm:flex">
-                <Link href="/repairs/booking">Book Repair</Link>
+                <Link href="/repairs/booking">{t.nav.bookRepair}</Link>
               </Button>
 
-              {/* Mobile menu button */}
+              <LanguageSwitcher />
+
               <Button
                 variant="ghost"
                 size="icon"
@@ -127,12 +128,10 @@ export default function Header() {
         </div>
       </header>
 
-      {/* Mobile navigation drawer — controlled so links can close it */}
       <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
         <SheetContent side="right" className="w-72 p-0 flex flex-col">
           <SheetTitle className="sr-only">Navigation menu</SheetTitle>
 
-          {/* Drawer header */}
           <div className="flex items-center justify-between px-5 py-4 border-b">
             <Link href="/" className="flex items-center gap-2 font-bold text-lg text-primary" onClick={closeMenu}>
               <Wrench className="h-4 w-4 text-amber-500" aria-hidden="true" />
@@ -143,7 +142,6 @@ export default function Header() {
             </Button>
           </div>
 
-          {/* Nav links */}
           <nav aria-label="Mobile navigation" className="flex flex-col gap-0.5 px-3 py-3 flex-1">
             {navLinks.map(({ href, label }) => (
               <Link
@@ -162,11 +160,10 @@ export default function Header() {
             ))}
           </nav>
 
-          {/* Bottom actions */}
           <div className="px-4 pb-6 pt-2 space-y-3 border-t">
             <Separator className="mb-3" />
             <Button asChild className="w-full" onClick={closeMenu}>
-              <Link href="/repairs/booking">Book a Repair</Link>
+              <Link href="/repairs/booking">{t.nav.bookRepair}</Link>
             </Button>
             <a
               href="tel:+351000000000"
@@ -175,11 +172,13 @@ export default function Header() {
               <Phone className="h-4 w-4" />
               +351 000 000 000
             </a>
+            <div className="flex justify-center">
+              <LanguageSwitcher />
+            </div>
           </div>
         </SheetContent>
       </Sheet>
 
-      {/* Cart drawer rendered at header level to be globally available */}
       <CartDrawer />
     </>
   )

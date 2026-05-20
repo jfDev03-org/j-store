@@ -11,6 +11,7 @@ import { formatPrice } from '@/lib/utils/format'
 import { useCartStore } from '@/store/cart'
 import type { Product } from '@/types/database'
 import { toast } from 'sonner'
+import { useTranslations } from '@/lib/i18n'
 
 interface ProductCardProps {
   product: Product
@@ -21,6 +22,7 @@ const NEW_PRODUCT_THRESHOLD_MS = 30 * 24 * 60 * 60 * 1000
 
 export default function ProductCard({ product, categorySlug }: ProductCardProps) {
   const { addItem, openCart } = useCartStore()
+  const t = useTranslations()
   const isNew = Date.now() - new Date(product.created_at).getTime() < NEW_PRODUCT_THRESHOLD_MS
   const [added, setAdded] = useState(false)
 
@@ -33,8 +35,8 @@ export default function ProductCard({ product, categorySlug }: ProductCardProps)
       slug: product.slug,
       category_slug: categorySlug,
     })
-    toast.success(`${product.name} added to cart`, {
-      action: { label: 'View cart', onClick: openCart },
+    toast.success(`${product.name} ${t.product.addedToCartSuffix}`, {
+      action: { label: t.product.viewCart, onClick: openCart },
     })
     setAdded(true)
     setTimeout(() => setAdded(false), 1500)
@@ -57,17 +59,17 @@ export default function ProductCard({ product, categorySlug }: ProductCardProps)
         />
         {product.stock === 0 && (
           <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-            <Badge variant="destructive">Out of Stock</Badge>
+            <Badge variant="destructive">{t.product.outOfStock}</Badge>
           </div>
         )}
         {isNew && product.stock > 0 && (
           <span className="absolute top-2 right-2 bg-emerald-500 text-white text-[10px] font-bold px-2 py-0.5 rounded z-10">
-            NEW
+            {t.product.newBadge}
           </span>
         )}
         {!isNew && product.stock > 0 && product.stock < 5 && (
           <Badge className="absolute top-2 left-2 bg-amber-500 text-white border-0 text-xs">
-            Only {product.stock} left
+            {t.product.onlyLeft.replace('%d', String(product.stock))}
           </Badge>
         )}
       </Link>
@@ -90,7 +92,7 @@ export default function ProductCard({ product, categorySlug }: ProductCardProps)
           size="sm"
           onClick={handleAddToCart}
           disabled={product.stock === 0 || added}
-          aria-label={added ? `${product.name} added to cart` : `Add ${product.name} to cart`}
+          aria-label={added ? t.product.addedToCartLabel.replace('%s', product.name) : t.product.addToCartLabel.replace('%s', product.name)}
           className={[
             'shrink-0 transition-colors',
             added ? 'bg-green-600 hover:bg-green-600' : 'bg-primary hover:bg-primary/90',
@@ -101,7 +103,7 @@ export default function ProductCard({ product, categorySlug }: ProductCardProps)
           ) : (
             <ShoppingCart className="h-4 w-4 mr-1.5" aria-hidden="true" />
           )}
-          {added ? 'Added!' : 'Add'}
+          {added ? t.product.added : t.product.add}
         </Button>
       </CardFooter>
     </Card>
