@@ -109,9 +109,9 @@ export default function Footer() {
                 </a>
               </li>
               <li>
-                <a href="mailto:hello@jstore.pt" className="flex items-center gap-2 hover:text-white transition-colors">
+                <a href="mailto:hello@j-store.pt" className="flex items-center gap-2 hover:text-white transition-colors">
                   <Mail className="h-4 w-4 text-amber-500 shrink-0" />
-                  hello@jstore.pt
+                  hello@j-store.pt
                 </a>
               </li>
             </ul>

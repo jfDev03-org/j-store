@@ -4,7 +4,7 @@ import { Resend } from 'resend'
 import type { OrderRow } from '@/types/database'
 
 const STORE_NAME = 'JStore'
-const SUPPORT_EMAIL = 'hello@jstore.pt'
+const SUPPORT_EMAIL = 'hello@j-store.pt'
 
 // Supabase Database Webhook for order status changes.
 // Configure in Supabase Dashboard → Database → Webhooks:

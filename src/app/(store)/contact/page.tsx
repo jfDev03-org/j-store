@@ -49,8 +49,8 @@ export default function ContactPage() {
               <div>
                 <dt className="font-medium text-sm">Email</dt>
                 <dd className="mt-0.5">
-                  <a href="mailto:hello@jstore.pt" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                    hello@jstore.pt
+                  <a href="mailto:hello@j-store.pt" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                    hello@j-store.pt
                   </a>
                 </dd>
               </div>

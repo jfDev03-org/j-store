@@ -3,7 +3,7 @@ import type { OrderRow } from '@/types/database'
 import type { RepairRequestRow } from '@/types/database'
 
 const STORE_NAME = 'JStore'
-const SUPPORT_EMAIL = 'hello@jstore.pt'
+const SUPPORT_EMAIL = 'hello@j-store.pt'
 
 function getResend() {
   return new Resend(process.env.RESEND_API_KEY)
