@@ -10,17 +10,16 @@ import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
 import { submitBooking } from '@/app/(store)/repairs/booking/actions'
 import { Loader2, ChevronLeft, ChevronRight } from 'lucide-react'
+import { useTranslations } from '@/lib/i18n'
 
-// Generated inside the component via useMemo — do not hoist to module level
-// (avoids server/client Date mismatch during SSR)
 function generateSlots(): Date[] {
   const slots: Date[] = []
   const today = new Date()
   for (let d = 1; d <= 14; d++) {
     const date = new Date(today)
     date.setDate(today.getDate() + d)
-    const day = date.getDay() // 0=Sun, 6=Sat
-    if (day === 0) continue // Skip Sunday
+    const day = date.getDay()
+    if (day === 0) continue
     for (let h = 9; h <= 17; h++) {
       const slot = new Date(date)
       slot.setHours(h, 0, 0, 0)
@@ -30,10 +29,7 @@ function generateSlots(): Date[] {
   return slots
 }
 
-const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
-const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat']
-
-function formatDate(d: Date) {
+function formatDate(d: Date, DAYS: readonly string[], MONTHS: readonly string[]) {
   return `${DAYS[d.getDay()]} ${d.getDate()} ${MONTHS[d.getMonth()]}`
 }
 
@@ -44,6 +40,9 @@ function formatTime(d: Date) {
 }
 
 export default function BookingForm() {
+  const t = useTranslations()
+  const MONTHS = t.booking.months
+  const DAYS = t.booking.days
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [selectedSlot, setSelectedSlot] = useState<Date | null>(null)
@@ -62,7 +61,6 @@ export default function BookingForm() {
     setForm((f) => ({ ...f, [field]: value }))
   }
 
-  // Group slots by date for display, filtered by week page
   const slotsByDate = TIME_SLOTS.reduce<Record<string, Date[]>>((acc, slot) => {
     const key = slot.toISOString().slice(0, 10)
     if (!acc[key]) acc[key] = []
@@ -71,7 +69,7 @@ export default function BookingForm() {
   }, {})
 
   const dateKeys = Object.keys(slotsByDate).sort()
-  const pageSize = 5 // days per page
+  const pageSize = 5
   const pagedKeys = dateKeys.slice(weekOffset * pageSize, (weekOffset + 1) * pageSize)
   const totalPages = Math.ceil(dateKeys.length / pageSize)
 
@@ -87,11 +85,11 @@ export default function BookingForm() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!selectedSlot) {
-      toast.error('Please select a time slot.')
+      toast.error(t.booking.errorSelectSlot)
       return
     }
     if (!form.customer_name || !form.customer_email || !form.customer_phone) {
-      toast.error('Please fill in all required fields.')
+      toast.error(t.booking.errorFillFields)
       return
     }
 
@@ -107,14 +105,14 @@ export default function BookingForm() {
       })
 
       if (!result.success) {
-        toast.error('error' in result ? result.error : 'An error occurred. Please try again.')
+        toast.error('error' in result ? result.error : t.booking.errorFailed)
         return
       }
 
-      toast.success("Booking confirmed! We'll send you a confirmation email shortly.")
+      toast.success(t.booking.successMsg)
       router.push('/')
     } catch {
-      toast.error('Failed to book. Please try again or call us.')
+      toast.error(t.booking.errorFailed)
     } finally {
       setLoading(false)
     }
@@ -122,10 +120,9 @@ export default function BookingForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8" noValidate>
-      {/* Calendar */}
       <fieldset>
         <legend className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-4">
-          Select Date &amp; Time
+          {t.booking.selectDateTime}
         </legend>
 
         <div className="flex items-center justify-between mb-3 text-sm">
@@ -135,9 +132,9 @@ export default function BookingForm() {
             size="sm"
             disabled={weekOffset === 0}
             onClick={() => setWeekOffset((p) => p - 1)}
-            aria-label="Previous days"
+            aria-label={t.booking.prevDays}
           >
-            <ChevronLeft className="h-4 w-4" /> Prev
+            <ChevronLeft className="h-4 w-4" /> {t.booking.prevDays}
           </Button>
           <span className="text-muted-foreground text-xs sm:text-sm">
             {pageRangeLabel}
@@ -148,9 +145,9 @@ export default function BookingForm() {
             size="sm"
             disabled={weekOffset >= totalPages - 1}
             onClick={() => setWeekOffset((p) => p + 1)}
-            aria-label="Next days"
+            aria-label={t.booking.nextDays}
           >
-            Next <ChevronRight className="h-4 w-4" />
+            {t.booking.nextDays} <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
 
@@ -158,9 +155,9 @@ export default function BookingForm() {
           {pagedKeys.map((dateKey) => (
             <div key={dateKey}>
               <p className="text-xs font-semibold text-muted-foreground mb-1.5">
-                {formatDate(slotsByDate[dateKey][0])}
+                {formatDate(slotsByDate[dateKey][0], DAYS, MONTHS)}
               </p>
-              <div className="grid grid-cols-4 sm:grid-cols-5 gap-1.5" role="group" aria-label={`Time slots for ${formatDate(slotsByDate[dateKey][0])}`}>
+              <div className="grid grid-cols-4 sm:grid-cols-5 gap-1.5" role="group" aria-label={`Time slots for ${formatDate(slotsByDate[dateKey][0], DAYS, MONTHS)}`}>
                 {slotsByDate[dateKey].map((slot) => {
                   const isSelected = selectedSlot?.toISOString() === slot.toISOString()
                   return (
@@ -169,7 +166,7 @@ export default function BookingForm() {
                       type="button"
                       onClick={() => setSelectedSlot(slot)}
                       aria-pressed={isSelected}
-                      aria-label={`${formatDate(slot)} at ${formatTime(slot)}`}
+                      aria-label={`${formatDate(slot, DAYS, MONTHS)} ${t.booking.atLabel} ${formatTime(slot)}`}
                       className={[
                         'px-2 py-1.5 text-xs rounded-md border transition-colors',
                         isSelected
@@ -188,19 +185,18 @@ export default function BookingForm() {
 
         {selectedSlot && (
           <Badge className="mt-3 bg-green-600 text-white border-0">
-            Selected: {formatDate(selectedSlot)} at {formatTime(selectedSlot)}
+            {t.booking.selectedLabel} {formatDate(selectedSlot, DAYS, MONTHS)} {t.booking.atLabel} {formatTime(selectedSlot)}
           </Badge>
         )}
       </fieldset>
 
-      {/* Contact */}
       <fieldset className="space-y-4">
         <legend className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-1">
-          Your Details
+          {t.booking.yourDetails}
         </legend>
 
         <div className="space-y-1.5">
-          <Label htmlFor="b_name">Full Name <span aria-hidden="true" className="text-destructive">*</span></Label>
+          <Label htmlFor="b_name">{t.booking.fullName} <span aria-hidden="true" className="text-destructive">*</span></Label>
           <Input
             id="b_name"
             required
@@ -213,7 +209,7 @@ export default function BookingForm() {
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-1.5">
-            <Label htmlFor="b_email">Email <span aria-hidden="true" className="text-destructive">*</span></Label>
+            <Label htmlFor="b_email">{t.booking.email} <span aria-hidden="true" className="text-destructive">*</span></Label>
             <Input
               id="b_email"
               type="email"
@@ -226,7 +222,7 @@ export default function BookingForm() {
             />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="b_phone">Phone <span aria-hidden="true" className="text-destructive">*</span></Label>
+            <Label htmlFor="b_phone">{t.booking.phone} <span aria-hidden="true" className="text-destructive">*</span></Label>
             <Input
               id="b_phone"
               type="tel"
@@ -240,21 +236,21 @@ export default function BookingForm() {
           </div>
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="b_device">Device (optional)</Label>
+          <Label htmlFor="b_device">{t.booking.device}</Label>
           <Input
             id="b_device"
-            placeholder="e.g. iPhone 15 Pro — cracked screen"
+            placeholder={t.booking.devicePlaceholder}
             value={form.device_info}
             onChange={(e) => update('device_info', e.target.value)}
             maxLength={200}
           />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="b_notes">Additional notes (optional)</Label>
+          <Label htmlFor="b_notes">{t.booking.notes}</Label>
           <Textarea
             id="b_notes"
             rows={3}
-            placeholder="Anything else we should know?"
+            placeholder={t.booking.notesPlaceholder}
             value={form.notes}
             onChange={(e) => update('notes', e.target.value)}
             maxLength={1000}
@@ -264,7 +260,7 @@ export default function BookingForm() {
 
       <Button type="submit" size="lg" className="w-full" disabled={loading}>
         {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />}
-        {loading ? 'Booking…' : 'Confirm Booking'}
+        {loading ? t.booking.booking : t.booking.confirmBooking}
       </Button>
     </form>
   )
